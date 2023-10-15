@@ -7,38 +7,49 @@ const getCust = (req, res) => {
     db.query(query, (err, result) => {
       if (err) {
         console.error('Gagal mengambil data customer:', err);
-        return;
+        res.status(500).json({ status: 'Error', data: err.message });
       } else {
-        res.status(200).json({ customer: result });
+        const responseData = result.length > 0 ? result : {};
+        res.status(200).json({ status: 'OK', data: responseData });
       }
     });
   } catch (error) {
     console.error('Terjadi kesalahan:', error);
-    res.status(500).json({ error: 'Terjadi kesalahan' });
+    res.status(500).json({ status: 'Error', data: 'Terjadi kesalahan' });
   }
 };
 
 const getCustById = (req, res) => {
   const { id } = req.params;
-  const sql = 'SELECT * FROM customer WHERE id= ?';
+  const sql = 'SELECT * FROM customer WHERE id = ?';
 
   try {
     db.query(sql, id, (err, result) => {
       if (err) {
         console.error('Gagal mengambil data customer:', err);
-        return;
+        res.status(500).json({ status: 'Error', data: err.message });
       } else {
-        res.status(200).json({ customerByID: result });
+        const responseData = result.length > 0 ? result : {};
+        res.status(200).json({ status: 'OK', data: responseData });
       }
     });
   } catch (error) {
     console.error('Terjadi kesalahan:', error);
-    res.status(500).json({ error: 'Terjadi kesalahan' });
+    res.status(500).json({ status: 'Error', data: 'Terjadi kesalahan' });
   }
 };
 
 const postCust = (req, res) => {
   const { name, address, email } = req.body;
+
+  if (!name || !/^[a-zA-Z\s]+$/.test(name)) {
+    return res.status(400).json({ error: 'Name harus diisi dan hanya boleh berisi huruf' });
+  }
+
+  if (!email || !/^[a-zA-Z]+$/.test(email)) {
+    return res.status(400).json({ error: 'Email harus diisi dan hanya boleh berisi huruf' });
+  }
+
   const sql = 'INSERT INTO customer (name, address, email) VALUES (?, ?, ?)';
   const values = [name, address, email];
 
@@ -48,18 +59,7 @@ const postCust = (req, res) => {
         console.error('Gagal menambahkan customer:', err);
         res.status(500).json({ error: 'Gagal menambahkan customer' });
       } else {
-        const data = {
-          isSuccess: true,
-          customer: {
-            id: result.insertId,
-            name,
-            address,
-            email,
-            created_at: new Date(),
-            updated_at: new Date(),
-          },
-        };
-        res.status(201).json({ message: data });
+        res.status(201).json({ status: 'OK', message: 'Data berhasil ditambahkan' });
       }
     });
   } catch (error) {
@@ -71,6 +71,15 @@ const postCust = (req, res) => {
 const updateCust = (req, res) => {
   const { id } = req.params;
   const { name, address, email } = req.body;
+
+  if (!name || !/^[a-zA-Z\s]+$/.test(name)) {
+    return res.status(400).json({ error: 'Name harus diisi dan hanya boleh berisi huruf' });
+  }
+
+  if (!email || !/^[a-zA-Z]+$/.test(email)) {
+    return res.status(400).json({ error: 'Email harus diisi dan hanya boleh berisi huruf' });
+  }
+
   const sql = 'UPDATE customer SET name = ?, address = ?, email = ? WHERE id = ?';
   const values = [name, address, email, id];
 
@@ -80,19 +89,9 @@ const updateCust = (req, res) => {
         console.error('Gagal memperbarui customer:', err);
         res.status(500).json({ error: 'Terjadi kesalahan saat memperbarui customer' });
       } else if (result.affectedRows > 0) {
-        const data = {
-          isSuccess: true,
-          customer: {
-            id,
-            name,
-            address,
-            email,
-            updated_at: new Date(),
-          },
-        };
-        res.status(200).json({ message: 'customer berhasil diperbarui', data });
+        res.status(200).json({ status: 'OK', message: 'Data berhasil diperbarui' });
       } else {
-        res.status(404).json({ error: 'customer tidak ditemukan' });
+        res.status(404).json({ error: 'Customer tidak ditemukan' });
       }
     });
   } catch (error) {
@@ -111,13 +110,7 @@ const deleteCust = (req, res) => {
         console.error('Gagal menghapus customer:', err);
         res.status(500).json({ error: 'Gagal menghapus customer' });
       } else if (result.affectedRows > 0) {
-        const data = {
-          isSuccess: true,
-          customer: {
-            id,
-          },
-        };
-        res.status(200).json({ message: 'customer berhasil dihapus', data });
+        res.status(200).json({ status: 'OK', message: 'Data berhasil dihapus' });
       } else {
         res.status(404).json({ error: 'customer tidak ditemukan' });
       }

@@ -9,7 +9,8 @@ const getMenu = (req, res) => {
         console.error('Gagal mengambil data menu:', err);
         return;
       } else {
-        res.status(200).json({ menu: result });
+        const responseData = result.length > 0 ? result : {};
+        res.status(200).json({ status: 'OK', data: responseData });
       }
     });
   } catch (error) {
@@ -28,7 +29,8 @@ const getMenuById = (req, res) => {
         console.error('Gagal mengambil data menu:', err);
         return;
       } else {
-        res.status(200).json({ MenuByID: result });
+        const responseData = result.length > 0 ? result : {};
+        res.status(200).json({ status: 'OK', data: responseData });
       }
     });
   } catch (error) {
@@ -39,6 +41,15 @@ const getMenuById = (req, res) => {
 
 const postMenu = (req, res) => {
   const { item, price } = req.body;
+
+  if (!item || !/^[a-zA-Z\s]+$/.test(item)) {
+    return res.status(400).json({ error: 'Item harus diisi dan hanya boleh berisi huruf' });
+  }
+
+  if (!price || isNaN(price)) {
+    return res.status(400).json({ error: 'Price harus diisi dan hanya boleh berisi angka' });
+  }
+
   const sql = 'INSERT INTO menu (item, price) VALUES (?, ?)';
   const values = [item, price];
 
@@ -48,17 +59,7 @@ const postMenu = (req, res) => {
         console.error('Gagal menambahkan menu:', err);
         res.status(500).json({ error: 'Gagal menambahkan menu' });
       } else {
-        const data = {
-          isSuccess: true,
-          menu: {
-            id: result.insertId,
-            item,
-            price,
-            created_at: new Date(),
-            updated_at: new Date(),
-          },
-        };
-        res.status(201).json({ message: data });
+        res.status(201).json({ status: 'OK', message: 'Data berhasil ditambahkan' });
       }
     });
   } catch (error) {
@@ -70,6 +71,15 @@ const postMenu = (req, res) => {
 const updateMenu = (req, res) => {
   const { id } = req.params;
   const { item, price } = req.body;
+
+  if (!item || !/^[a-zA-Z\s]+$/.test(item)) {
+    return res.status(400).json({ error: 'Item harus diisi dan hanya boleh berisi huruf' });
+  }
+
+  if (!price || isNaN(price)) {
+    return res.status(400).json({ error: 'Price harus diisi dan hanya boleh berisi angka' });
+  }
+
   const sql = 'UPDATE menu SET item = ?, price = ? WHERE id = ?';
   const values = [item, price, id];
 
@@ -79,16 +89,7 @@ const updateMenu = (req, res) => {
         console.error('Gagal memperbarui menu:', err);
         res.status(500).json({ error: 'Terjadi kesalahan saat memperbarui menu' });
       } else if (result.affectedRows > 0) {
-        const data = {
-          isSuccess: true,
-          menu: {
-            id,
-            item,
-            price,
-            updated_at: new Date(),
-          },
-        };
-        res.status(200).json({ message: 'Menu berhasil diperbarui', data });
+        res.status(200).json({ status: 'OK', message: 'Data berhasil diperbarui' });
       } else {
         res.status(404).json({ error: 'Menu tidak ditemukan' });
       }
@@ -109,13 +110,7 @@ const deleteMenu = (req, res) => {
         console.error('Gagal menghapus menu:', err);
         res.status(500).json({ error: 'Terjadi kesalahan saat menghapus menu' });
       } else if (result.affectedRows > 0) {
-        const data = {
-          isSuccess: true,
-          menu: {
-            id,
-          },
-        };
-        res.status(200).json({ message: 'Menu berhasil dihapus', data });
+        res.status(200).json({ status: 'OK', message: 'Data berhasil dihapus' });
       } else {
         res.status(404).json({ error: 'Menu tidak ditemukan' });
       }

@@ -9,7 +9,8 @@ const getCategories = (req, res) => {
         console.error('Gagal mengambil data categories:', err);
         return;
       } else {
-        res.status(200).json({ categories: result });
+        const responseData = result.length > 0 ? result : {};
+        res.status(200).json({ status: 'OK', data: responseData });
       }
     });
   } catch (error) {
@@ -28,7 +29,8 @@ const getCategoriesById = (req, res) => {
         console.error('Gagal mengambil data categories:', err);
         return;
       } else {
-        res.status(200).json({ categoriesByID: result });
+        const responseData = result.length > 0 ? result : {};
+        res.status(200).json({ status: 'OK', data: responseData });
       }
     });
   } catch (error) {
@@ -42,22 +44,17 @@ const postCategories = (req, res) => {
   const sql = 'INSERT INTO categories (name) VALUES (?)';
   const values = [name];
 
+  if (!name || !/^[a-zA-Z\s]+$/.test(name)) {
+    return res.status(400).json({ error: 'nama harus diisi dan hanya boleh berisi huruf' });
+  }
+
   try {
     db.query(sql, values, (err, result) => {
       if (err) {
         console.error('Gagal menambahkan categories:', err);
         res.status(500).json({ error: 'Gagal menambahkan categories' });
       } else {
-        const data = {
-          isSuccess: true,
-          categories: {
-            id: result.insertId,
-            name,
-            created_at: new Date(),
-            updated_at: new Date(),
-          },
-        };
-        res.status(201).json({ message: data });
+        res.status(201).json({ status: 'OK', message: 'Data berhasil ditambahkan' });
       }
     });
   } catch (error) {
@@ -72,21 +69,17 @@ const updateCategories = (req, res) => {
   const sql = 'UPDATE categories SET name = ? WHERE id = ?';
   const values = [name, id];
 
+  if (!name || !/^[a-zA-Z\s]+$/.test(name)) {
+    return res.status(400).json({ error: 'nama harus diisi dan hanya boleh berisi huruf' });
+  }
+
   try {
     db.query(sql, values, (err, result) => {
       if (err) {
         console.error('Gagal memperbarui categories:', err);
         res.status(500).json({ error: 'Terjadi kesalahan saat memperbarui categories' });
       } else if (result.affectedRows > 0) {
-        const data = {
-          isSuccess: true,
-          categories: {
-            id,
-            name,
-            updated_at: new Date(),
-          },
-        };
-        res.status(200).json({ message: 'categories berhasil diperbarui', data });
+        res.status(200).json({ status: 'OK', message: 'Data berhasil diperbarui' });
       } else {
         res.status(404).json({ error: 'categories tidak ditemukan' });
       }
@@ -107,13 +100,7 @@ const deleteCategories = (req, res) => {
         console.error('Gagal menghapus categories:', err);
         res.status(500).json({ error: 'Gagal menghapus categories' });
       } else if (result.affectedRows > 0) {
-        const data = {
-          isSuccess: true,
-          categories: {
-            id,
-          },
-        };
-        res.status(200).json({ message: 'categories berhasil dihapus', data });
+        res.status(200).json({ status: 'OK', message: 'Data berhasil dihapus' });
       } else {
         res.status(404).json({ error: 'categories tidak ditemukan' });
       }
